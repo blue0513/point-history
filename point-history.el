@@ -31,9 +31,11 @@
 
 (require 'popwin)
 
-(defvar-local point-history--list nil)
-(defvar point-history-show-buffer "*point-history-show*")
+(defvar point-history--list nil)
+(defvar point-history-show-buffer " *point-history-show*")
 (defvar point-history-max-item-num 100)
+(defvar point-history-ignore-buffer
+  "^ \\*Minibuf\\|^ \\*Echo\\|^ \\*point-history-show*")
 
 (defvar point-history-show-mode-map
   (let ((kmap (make-sparse-keymap)))
@@ -75,7 +77,8 @@
 	 (line-content (buffer-substring-no-properties
 			(line-beginning-position) (line-end-position)))
 	 (point-item (list pos buffer line-content)))
-    (point-history--push-item! point-item)))
+    (if (not (string-match-p point-history-ignore-buffer (buffer-name buffer)))
+	(point-history--push-item! point-item))))
 
 (defun point-history--build-history (points)
   (dolist (point points)
