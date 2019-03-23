@@ -31,11 +31,23 @@
 
 (require 'popwin)
 
-(defvar point-history--list nil)
+(defvar point-history-list nil)
 (defvar point-history-show-buffer " *point-history-show*")
-(defvar point-history-max-item-num 100)
-(defvar point-history-ignore-buffer
-  "^ \\*Minibuf\\|^ \\*Echo\\|^ \\*point-history-show*")
+
+(defcustom point-history-max-item-num 100
+  "Max number of points saved in history."
+  :type 'integer
+  :group 'point-history)
+
+(defcustom point-history-show-buffer-height 30
+  "Buffer height to show point-history."
+  :type 'integer
+  :group 'point-history)
+
+(defcustom point-history-ignore-buffer "^ \\*Minibuf\\|^ \\*point-history-show*"
+  "Regular expression describing buffer names that are never saved in history."
+  :type '(choice (const nil) (regexp))
+  :group 'point-history)
 
 (defvar point-history-show-mode-map
   (let ((kmap (make-sparse-keymap)))
@@ -51,57 +63,77 @@
   (use-local-map point-history-show-mode-map))
 
 (defun point-history-goto ()
+  "Go to the point in point-history list."
   (interactive)
   (let* ((buffer-str (get-text-property (point) 'point-history-buffer))
-	(pos-str (get-text-property (point) 'point-history-point))
-	(pos (string-to-number pos-str)))
+	 (line-str (get-text-property (point) 'point-history-line))
+	 (line (string-to-number line-str)))
     (if (null buffer-str)
 	(message "No point at this line.")
       (pop-to-buffer (get-buffer buffer-str))
-      (goto-char pos))))
+      (goto-line line))))
 
 (defun point-history--uniqu-list! ()
-  (delq nil (delete-dups point-history--list)))
+  "Delete duplicate element in point-history-list."
+  (delq nil (delete-dups point-history-list)))
 
 (defun point-history--push-item! (item)
-  (push item point-history--list)
+  "Push ITEM to point-history-list."
+  (push item point-history-list)
   (point-history--uniqu-list!)
-  (if (> (length point-history--list) point-history-max-item-num)
-      (let* ((last-item (car (last point-history--list)))
-	     (new-point-history--list (remove last-item point-history--list)))
-	(setq point-history--list new-point-history--list))))
+  (if (> (length point-history-list) point-history-max-item-num)
+      (let* ((last-item (car (last point-history-list)))
+	     (new-point-history--list (remove last-item point-history-list)))
+	(setq point-history-list new-point-history--list))))
 
 (defun point-history--update-list! ()
-  (let* ((pos (point))
+  "Build point-history to push point-history-list."
+  (let* ((line (line-number-at-pos))
 	 (buffer (current-buffer))
-	 (line-content (buffer-substring-no-properties
+	 (line-content (buffer-substring
 			(line-beginning-position) (line-end-position)))
-	 (point-item (list pos buffer line-content)))
+	 (point-item (list line buffer line-content)))
     (if (not (string-match-p point-history-ignore-buffer (buffer-name buffer)))
 	(point-history--push-item! point-item))))
 
 (defun point-history--build-history (points)
+  "Build human readable history-list from POINTS."
   (dolist (point points)
-    (let* ((pos-info (format "%s" (nth 0 point)))
+    (let* ((line-info (format "%s" (nth 0 point)))
 	   (buffer-info (format "%s" (nth 1 point)))
-	   (line-info (format "%s" (nth 2 point)))
-	   (str (concat buffer-info ":" pos-info ":" line-info)))
+	   (content-info (format "%s" (nth 2 point)))
+	   (str (concat buffer-info ":" line-info ":" content-info)))
       (put-text-property 0 (length str) 'point-history-buffer buffer-info str)
-      (put-text-property 0 (length str) 'point-history-point pos-info str)
+      (put-text-property 0 (length str) 'point-history-line line-info str)
       (insert (concat str "\n"))))
   (setq header-line-format header)
   (setq buffer-read-only t))
 
-(defun point-history-show ()
-  (interactive)
-  (let* ((points point-history--list)
-	 (header "buffer:pos:line"))
+(defun point-history--show ()
+  "Open the list buffer of point-history-list."
+  (let* ((points point-history-list)
+	 (header "buffer:line:content"))
     (popwin:popup-buffer
-     (generate-new-buffer point-history-show-buffer))
+     (generate-new-buffer point-history-show-buffer)
+     :height point-history-show-buffer-height)
+    (beginning-of-buffer)
     (point-history-show-mode)
     (point-history--build-history points)))
 
-(run-with-idle-timer 1 t 'point-history--update-list!)
+(defun point-history-show ()
+  "Show point-history-list."
+  (interactive)
+  (point-history--show))
+
+;;;###autoload
+(define-minor-mode point-history-mode
+  "Global minor mode for point-history-mode"
+  :init-value nil
+  :global t
+  :lighter " ph"
+  (if point-history-mode
+      (setq point-history-timer (run-with-idle-timer 1 t 'point-history--update-list!))
+    (cancel-timer point-history-timer)))
 
 ;; * provide
 
