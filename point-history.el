@@ -1,4 +1,4 @@
-;;; point-history --- History of points you visited before
+;;; point-history --- Show the history of points you visited before
 
 ;; Copyright (C) 2019- blue0513
 
@@ -41,6 +41,11 @@
 
 (defcustom point-history-show-buffer-height 30
   "Buffer height to show point-history."
+  :type 'integer
+  :group 'point-history)
+
+(defcustom point-history-save-timer 1
+  "Interval time to save point in history."
   :type 'integer
   :group 'point-history)
 
@@ -132,7 +137,9 @@
   :global t
   :lighter " ph"
   (if point-history-mode
-      (setq point-history-timer (run-with-idle-timer 1 t 'point-history--update-list!))
+      (setq point-history-timer
+	    (run-with-idle-timer
+	     point-history-save-timer t 'point-history--update-list!))
     (cancel-timer point-history-timer)))
 
 ;; * provide
