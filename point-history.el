@@ -71,21 +71,39 @@
   "Go to the point in point-history list."
   (interactive)
   (let* ((buffer-str (get-text-property (point) 'point-history-buffer))
-	 (line-str (get-text-property (point) 'point-history-line))
-	 (line (string-to-number line-str)))
+	 (pos-str (get-text-property (point) 'point-history-position))
+	 (pos (string-to-number pos-str)))
     (if (null buffer-str)
 	(message "No point at this line.")
       (pop-to-buffer (get-buffer buffer-str))
-      (goto-line line))))
+      (goto-char pos))))
 
-(defun point-history--uniqu-list! ()
+(defun point-history--build-unique-list! ()
   "Delete duplicate element in point-history-list."
   (delq nil (delete-dups point-history-list)))
 
+(defun point-history--remove-duplicate-element (content buffer line-num)
+  "Remove duplicated element by comparing CONTENT & BUFFER & LINE-NUM."
+  (seq-remove (lambda (elt)
+		(and (string-equal (substring-no-properties (nth 1 elt)) content)
+		     (eq (nth 2 elt) line-num)
+		     (string-equal (buffer-name (nth 3 elt)) (buffer-name buffer))))
+	      point-history-list))
+
+(defun point-history-maybe-unique-push! (item)
+  "Push ITEM into re-builded point-history-list containing maybe unique elements."
+  (let* ((content (substring-no-properties (nth 1 item)))
+	 (line-num (nth 2 item))
+	 (buffer (nth 3 item))
+	 (unique-element-list (point-history--remove-duplicate-element
+			       content buffer line-num)))
+	 (setq point-history-list unique-element-list)
+	 (push item point-history-list)))
+
 (defun point-history--push-item! (item)
   "Push ITEM to point-history-list."
-  (push item point-history-list)
-  (point-history--uniqu-list!)
+  (point-history-maybe-unique-push! item)
+  (point-history--build-unique-list!)
   (if (> (length point-history-list) point-history-max-item-num)
       (let* ((last-item (car (last point-history-list)))
 	     (new-point-history--list (remove last-item point-history-list)))
@@ -93,35 +111,36 @@
 
 (defun point-history--update-list! ()
   "Build point-history to push point-history-list."
-  (let* ((line (line-number-at-pos))
-	 (buffer (current-buffer))
+  (let* ((marker (point-marker))
+	 (buffer (marker-buffer marker))
+	 (line-num (line-number-at-pos))
 	 (line-content (buffer-substring
 			(line-beginning-position) (line-end-position)))
-	 (point-item (list line buffer line-content)))
+	 (point-item (list marker line-content line-num buffer)))
     (if (not (string-match-p point-history-ignore-buffer (buffer-name buffer)))
 	(point-history--push-item! point-item))))
 
 (defun point-history--build-history (points)
   "Build human readable history-list from POINTS."
   (dolist (point points)
-    (let* ((line-info (format "%s" (nth 0 point)))
-	   (buffer-info (format "%s" (nth 1 point)))
-	   (content-info (format "%s" (nth 2 point)))
-	   (str (concat buffer-info ":" line-info ":" content-info)))
+    (let* ((pos-info (format "%s" (marker-position (nth 0 point))))
+	   (buffer-info (format "%s" (marker-buffer (nth 0 point))))
+	   (content-info (format "%s" (nth 1 point)))
+	   (str (concat buffer-info ":" content-info)))
       (put-text-property 0 (length str) 'point-history-buffer buffer-info str)
-      (put-text-property 0 (length str) 'point-history-line line-info str)
+      (put-text-property 0 (length str) 'point-history-position pos-info str)
       (insert (concat str "\n"))))
   (setq header-line-format header)
-  (setq buffer-read-only t))
+  (setq buffer-read-only t)
+  (beginning-of-buffer))
 
 (defun point-history--show ()
   "Open the list buffer of point-history-list."
   (let* ((points point-history-list)
-	 (header "buffer:line:content"))
+	 (header "buffer:content"))
     (popwin:popup-buffer
      (generate-new-buffer point-history-show-buffer)
      :height point-history-show-buffer-height)
-    (beginning-of-buffer)
     (point-history-show-mode)
     (point-history--build-history points)))
 
