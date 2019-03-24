@@ -19,6 +19,13 @@ When you want to back to the position, you can select the position from the hist
 
 ## Setup
 
+### Requrements
+
+This package use [`popwin-el`](https://github.com/m2ym/popwin-el).  
+You need to install it beforehand.
+
+### Settings
+
 `git clone` and edit your init.el as below.
 
 ```elisp
