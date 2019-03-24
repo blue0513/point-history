@@ -9,7 +9,7 @@ This package is greatly inspired from [point-undo.el](https://www.emacswiki.org/
 This package can remember the cursor-position as history, which you stayed before.  
 When you want to back to the position, you can select the position from the history.
 
-![point-history](https://gyazo.com/593e28a5b7891e09554bbe0d364e6e2a)
+[![point-history](https://i.gyazo.com/593e28a5b7891e09554bbe0d364e6e2a.gif)](https://gyazo.com/593e28a5b7891e09554bbe0d364e6e2a)
 
 ## Features
 
