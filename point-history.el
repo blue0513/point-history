@@ -90,7 +90,7 @@
 		     (string-equal (buffer-name (nth 3 elt)) (buffer-name buffer))))
 	      point-history-list))
 
-(defun point-history-maybe-unique-push! (item)
+(defun point-history--maybe-unique-push! (item)
   "Push ITEM into re-builded point-history-list containing maybe unique elements."
   (let* ((content (substring-no-properties (nth 1 item)))
 	 (line-num (nth 2 item))
@@ -102,7 +102,7 @@
 
 (defun point-history--push-item! (item)
   "Push ITEM to point-history-list."
-  (point-history-maybe-unique-push! item)
+  (point-history--maybe-unique-push! item)
   (point-history--build-unique-list!)
   (if (> (length point-history-list) point-history-max-item-num)
       (let* ((last-item (car (last point-history-list)))
@@ -126,7 +126,7 @@
     (let* ((pos-info (format "%s" (marker-position (nth 0 point))))
 	   (buffer-info (format "%s" (marker-buffer (nth 0 point))))
 	   (content-info (format "%s" (nth 1 point)))
-	   (str (concat buffer-info ":" content-info)))
+	   (str (concat buffer-info ": " content-info)))
       (put-text-property 0 (length str) 'point-history-buffer buffer-info str)
       (put-text-property 0 (length str) 'point-history-position pos-info str)
       (insert (concat str "\n"))))

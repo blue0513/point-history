@@ -1,10 +1,21 @@
 # Point History
 
-Remember points you visited before as history, and re-visit them quickly.
+Remember the points you visited before as history, and re-visit them quickly.
+
+This package is greatly inspired from [point-undo.el](https://www.emacswiki.org/emacs/point-undo.el) and [jump-back!](https://qiita.com/zk_phi/items/c145b7bd8077b8a0f537).
 
 ## Whats' This
 
-![gif]()
+This package can remember the cursor-position as history, which you stayed before.  
+When you want to back to the position, you can select the position from the history.
+
+![point-history](https://gyazo.com/593e28a5b7891e09554bbe0d364e6e2a)
+
+## Features
+
++ Remember _point-info_ as history which you stayed over `point-history-save-timer`
++ _point-info_ contains buffer-name, cursor-position, line-content
++ Access the list of point-info's history and select them to visit the position again
 
 ## Setup
 
@@ -16,6 +27,9 @@ Remember points you visited before as history, and re-visit them quickly.
 
 ;; enable minor mode
 (point-history-mode t)
+
+;; optional
+(global-set-key (kbd "YOUR KEY") 'point-history-show)
 ```
 
 ## Usage
