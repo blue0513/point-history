@@ -79,7 +79,7 @@
       (goto-char pos))))
 
 (defun point-history--build-unique-list! ()
-  "Delete duplicate element in point-history-list."
+  "Delete duplicated element in point-history-list."
   (delq nil (delete-dups point-history-list)))
 
 (defun point-history--remove-duplicate-element (content buffer line-num)
