@@ -84,9 +84,9 @@
 
 (defun point-history-next-line ()
   "Go to next line in `point-history-show-mode'.
-If current-line is end of the buffer, go to the first line."
+If the current line number is end of the buffer, go to the first line."
   (interactive)
-  (let* ((current-line-num (+ 1 (current-line)))
+  (let* ((current-line-num (line-number-at-pos))
          (begining-line-num 1)
          (total-line-num (count-lines (point-min) (point-max))))
     (if (>= current-line-num total-line-num)
@@ -95,9 +95,9 @@ If current-line is end of the buffer, go to the first line."
 
 (defun point-history-prev-line ()
   "Go to previous line in `point-history-show-mode'.
-If current-line is begining of the buffer, go to the last line."
+If the current line number is begining of the buffer, go to the last line."
   (interactive)
-  (let* ((current-line-num (+ 1 (current-line)))
+  (let* ((current-line-num (line-number-at-pos))
          (begining-line-num 1)
          (total-line-num (count-lines (point-min) (point-max))))
     (if (<= current-line-num begining-line-num)
