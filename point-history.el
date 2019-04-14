@@ -17,6 +17,7 @@
 ;; Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 ;; Author: blue0513
+;; Package-Requires: ((popwin "20150315.1300"))
 ;; URL: https://github.com/blue0513/point-history
 ;; Version: 0.1.0
 
