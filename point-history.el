@@ -105,10 +105,6 @@ If the current line number is begining of the buffer, go to the last line."
         (goto-line total-line-num)
       (goto-line (- current-line-num 1)))))
 
-(defun point-history--build-unique-list! ()
-  "Delete duplicated element in point-history-list."
-  (delq nil (delete-dups point-history-list)))
-
 (defun point-history--remove-duplicate-element (content buffer line-num)
   "Remove duplicated element by comparing CONTENT & BUFFER & LINE-NUM."
   (seq-remove (lambda (elt)
@@ -122,15 +118,26 @@ If the current line number is begining of the buffer, go to the last line."
   (let* ((content (substring-no-properties (nth 1 item)))
 	 (line-num (nth 2 item))
 	 (buffer (nth 3 item))
-	 (unique-element-list (point-history--remove-duplicate-element
-			       content buffer line-num)))
+	 (maybe-unique-element-list
+          (point-history--remove-duplicate-element
+	   content buffer line-num))
+         (unique-element-list
+          (delq nil (delete-dups maybe-unique-element-list))))
 	 (setq point-history-list unique-element-list)
 	 (push item point-history-list)))
+
+(defun point-history--build-valid-buffer-list! ()
+  "Remove killed buffer from point-history-list."
+  (let* ((old-point-history-list point-history-list)
+         (new-point-history-list
+          (seq-filter (lambda (elt) (buffer-live-p (nth 3 elt)))
+                      old-point-history-list)))
+    (setq point-history-list new-point-history-list)))
 
 (defun point-history--push-item! (item)
   "Push ITEM to point-history-list."
   (point-history--maybe-unique-push! item)
-  (point-history--build-unique-list!)
+  (point-history--build-valid-buffer-list!)
   (if (> (length point-history-list) point-history-max-item-num)
       (let* ((last-item (car (last point-history-list)))
 	     (new-point-history--list (remove last-item point-history-list)))
@@ -145,6 +152,11 @@ If the current line number is begining of the buffer, go to the last line."
 			(line-beginning-position) (line-end-position)))
 	 (point-item (list marker line-content line-num buffer)))
     (if (not (string-match-p point-history-ignore-buffer (buffer-name buffer)))
+        ;; Each point-item has
+        ;; nth 0: marker info
+        ;; nth 1: line content
+        ;; nth 2: line number
+        ;; nth 3: buffer info
 	(point-history--push-item! point-item))))
 
 (defun point-history--build-history (points)
