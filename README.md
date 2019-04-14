@@ -44,6 +44,13 @@ You need to install it beforehand.
 Use `M-x point-history-show` and you can open `point-history-show-buffer` with history.  
 Then you can select the point in history and press `Enter` to jump to its position.
 
+When you want to change the keymap in `point-history-show-buffer`, edit init.el as below.
+
+```elisp
+(define-key point-history-show-mode-map (kbd "n") 'point-history-next-line)
+(define-key point-history-show-mode-map (kbd "p") 'point-history-prev-line)
+```
+
 ## Customizable variables
 
 |variable|usage|default value|

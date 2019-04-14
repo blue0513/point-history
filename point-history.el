@@ -57,6 +57,10 @@
 (defvar point-history-show-mode-map
   (let ((kmap (make-sparse-keymap)))
     (define-key kmap (kbd "RET") 'point-history-goto)
+    (define-key kmap (kbd "n") 'point-history-next-line)
+    (define-key kmap (kbd "TAB") 'point-history-next-line)
+    (define-key kmap (kbd "p") 'point-history-prev-line)
+    (define-key kmap (kbd "<C-tab>") 'point-history-prev-line)
     kmap))
 
 (defun point-history-show-mode nil
@@ -77,6 +81,28 @@
 	(message "No point at this line.")
       (pop-to-buffer (get-buffer buffer-str))
       (goto-char pos))))
+
+(defun point-history-next-line ()
+  "Go to next line in `point-history-show-mode'.
+If the current line number is end of the buffer, go to the first line."
+  (interactive)
+  (let* ((current-line-num (line-number-at-pos))
+         (begining-line-num 1)
+         (total-line-num (count-lines (point-min) (point-max))))
+    (if (>= current-line-num total-line-num)
+        (goto-line begining-line-num)
+      (goto-line (+ 1 current-line-num)))))
+
+(defun point-history-prev-line ()
+  "Go to previous line in `point-history-show-mode'.
+If the current line number is begining of the buffer, go to the last line."
+  (interactive)
+  (let* ((current-line-num (line-number-at-pos))
+         (begining-line-num 1)
+         (total-line-num (count-lines (point-min) (point-max))))
+    (if (<= current-line-num begining-line-num)
+        (goto-line total-line-num)
+      (goto-line (- current-line-num 1)))))
 
 (defun point-history--build-unique-list! ()
   "Delete duplicated element in point-history-list."
