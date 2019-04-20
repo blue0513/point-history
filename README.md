@@ -63,8 +63,9 @@ When you want to change the keymap in `point-history-show-buffer`, edit init.el 
 
 ## Tips
 
-If you edit `point-history-ignore-buffer`, You can ignore points to save into history for specific buffers like minibuffer.
+If you edit `point-history-ignore-buffer` and `point-history-ignore-major-mode`, You can ignore points to save into history for specific buffers and major-modes.
 
 ```elisp
 (setq point-history-ignore-buffer "^ \\*Minibuf\\|^ \\*point-history-show*")
+(setq point-history-ignore-major-mode '(emacs-lisp-mode ruby-mode))
 ```
