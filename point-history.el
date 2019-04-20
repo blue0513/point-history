@@ -100,8 +100,13 @@
 	 (pos (string-to-number pos-str)))
     (if (null buffer-str)
 	(message "No point at this line.")
-      (pop-to-buffer (get-buffer buffer-str))
-      (goto-char pos))))
+      (point-history--goto buffer-str pos))))
+
+(defun point-history--goto (buffer-str pos)
+  "Pop to BUFFER-STR and go to POS, then close `point-history-show-buffer'."
+  (pop-to-buffer (get-buffer buffer-str))
+  (goto-char pos)
+  (point-history-close))
 
 (defun point-history-preview-at-point ()
   "Preview the buffer at point in the other window."
