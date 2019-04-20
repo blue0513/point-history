@@ -34,6 +34,7 @@
 
 (defvar point-history-list nil)
 (defvar point-history-show-buffer " *point-history-show*")
+(defvar point-history-last-visited-buffer nil)
 
 (defcustom point-history-max-item-num 100
   "Max number of points saved in history."
@@ -55,13 +56,26 @@
   :type '(choice (const nil) (regexp))
   :group 'point-history)
 
+(defcustom point-history-should-preview t
+  "If non-nil, it shows the preview of buffers at the cursor in `point-history-show-buffer'."
+  :type 'boolean
+  :group 'point-history)
+
 (defvar point-history-show-mode-map
   (let ((kmap (make-sparse-keymap)))
-    (define-key kmap (kbd "RET") 'point-history-goto)
-    (define-key kmap (kbd "n") 'point-history-next-line)
-    (define-key kmap (kbd "TAB") 'point-history-next-line)
-    (define-key kmap (kbd "p") 'point-history-prev-line)
+    ;; point-history-goto
+    (define-key kmap (kbd "RET")     'point-history-goto)
+    ;; point-history-next-line
+    (define-key kmap (kbd "n")       'point-history-next-line)
+    (define-key kmap (kbd "C-n")   'point-history-next-line)
+    (define-key kmap (kbd "TAB")     'point-history-next-line)
+    ;; point-history-prev-line
+    (define-key kmap (kbd "p")       'point-history-prev-line)
+    (define-key kmap (kbd "C-p")     'point-history-prev-line)
     (define-key kmap (kbd "<C-tab>") 'point-history-prev-line)
+    ;; point-history-close
+    (define-key kmap (kbd "g")       'point-history-close)
+    (define-key kmap (kbd "C-g")     'point-history-close)
     kmap))
 
 (defun point-history-show-mode nil
@@ -71,6 +85,12 @@
   (setq major-mode 'point-history-show-mode)
   (setq mode-name "point-history")
   (use-local-map point-history-show-mode-map))
+
+(defun point-history-close ()
+  "Close point-history-show-buffer."
+  (interactive)
+  (switch-to-buffer-other-window point-history-last-visited-buffer)
+  (popwin:close-popup-window))
 
 (defun point-history-goto ()
   "Go to the point in point-history list."
@@ -83,6 +103,21 @@
       (pop-to-buffer (get-buffer buffer-str))
       (goto-char pos))))
 
+(defun point-history-preview-at-point ()
+  "Preview the buffer at point in the other window."
+  (interactive)
+  (let* ((buffer-str (get-text-property (point) 'point-history-buffer))
+         (buffer (get-buffer buffer-str))
+         (pos-str (get-text-property (point) 'point-history-position))
+         (pos (string-to-number pos-str)))
+    (point-history--preview-at-point buffer pos)
+    (popwin:select-popup-window)))
+
+(defun point-history--preview-at-point (buffer pos)
+  "Show BUFFER and set the cursor at POS."
+  (switch-to-buffer-other-window buffer)
+  (goto-line (line-number-at-pos pos)))
+
 (defun point-history-next-line ()
   "Go to next line in `point-history-show-mode'.
 If the current line number is end of the buffer, go to the first line."
@@ -92,7 +127,9 @@ If the current line number is end of the buffer, go to the first line."
          (total-line-num (count-lines (point-min) (point-max))))
     (if (>= current-line-num total-line-num)
         (goto-line begining-line-num)
-      (goto-line (+ 1 current-line-num)))))
+      (goto-line (+ 1 current-line-num))
+      (if point-history-should-preview
+          (point-history-preview-at-point)))))
 
 (defun point-history-prev-line ()
   "Go to previous line in `point-history-show-mode'.
@@ -103,7 +140,9 @@ If the current line number is begining of the buffer, go to the last line."
          (total-line-num (count-lines (point-min) (point-max))))
     (if (<= current-line-num begining-line-num)
         (goto-line total-line-num)
-      (goto-line (- current-line-num 1)))))
+      (goto-line (- current-line-num 1))
+      (if point-history-should-preview
+          (point-history-preview-at-point)))))
 
 (defun point-history--remove-duplicate-element (content buffer line-num)
   "Remove duplicated element by comparing CONTENT & BUFFER & LINE-NUM."
@@ -123,8 +162,12 @@ If the current line number is begining of the buffer, go to the last line."
 	   content buffer line-num))
          (unique-element-list
           (delq nil (delete-dups maybe-unique-element-list))))
-	 (setq point-history-list unique-element-list)
-	 (push item point-history-list)))
+    (setq point-history-list unique-element-list)
+    (push item point-history-list)))
+
+(defun point-history--save-last-visited-buffer! (buffer)
+  "Set BUFFER as `point-history-last-visited-buffer'."
+  (setq point-history-last-visited-buffer buffer))
 
 (defun point-history--build-valid-buffer-list! ()
   "Remove killed buffer from point-history-list."
@@ -177,8 +220,10 @@ If the current line number is begining of the buffer, go to the last line."
   "Open the list buffer of point-history-list."
   (let* ((points point-history-list)
 	 (header "buffer:content"))
+    (point-history--save-last-visited-buffer! (current-buffer))
     (popwin:popup-buffer
      (generate-new-buffer point-history-show-buffer)
+     :stick t
      :height point-history-show-buffer-height)
     (point-history-show-mode)
     (point-history--build-history points)))
