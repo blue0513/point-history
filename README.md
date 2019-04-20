@@ -9,13 +9,14 @@ This package is greatly inspired from [point-undo.el](https://www.emacswiki.org/
 This package can remember the cursor-position as history, which you stayed before.  
 When you want to back to the position, you can select the position from the history.
 
-[![point-history](https://i.gyazo.com/593e28a5b7891e09554bbe0d364e6e2a.gif)](https://gyazo.com/593e28a5b7891e09554bbe0d364e6e2a)
+[![point-history](https://i.gyazo.com/68ef30d465487356e02b30790c49a8d4.gif)](https://gyazo.com/68ef30d465487356e02b30790c49a8d4)
 
 ## Features
 
 + Remember _point-info_ as history which you stayed over `point-history-save-timer`
 + _point-info_ contains buffer-name, cursor-position, line-content
 + Access the list of point-info's history and select them to visit the position again
++ Preview the buffer quickly in the other window
 
 ## Setup
 
@@ -58,6 +59,7 @@ When you want to change the keymap in `point-history-show-buffer`, edit init.el 
 |point-history-max-item-num|Max number of points saved in history|100|
 |point-history-show-buffer-height|Buffer height to show point-history|30|
 |point-history-save-timer|Interval time to save point in history|1|
+|point-history-should-preview|show the preview of buffers|t|
 
 ## Tips
 
