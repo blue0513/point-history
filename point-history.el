@@ -61,6 +61,11 @@
   :type 'boolean
   :group 'point-history)
 
+(defcustom point-history-ignore-major-mode nil
+  "List of ignored major modes."
+  :type '(repeat symbol)
+  :group 'point-history)
+
 (defvar point-history-show-mode-map
   (let ((kmap (make-sparse-keymap)))
     ;; point-history-goto
@@ -199,7 +204,8 @@ If the current line number is begining of the buffer, go to the last line."
 	 (line-content (buffer-substring
 			(line-beginning-position) (line-end-position)))
 	 (point-item (list marker line-content line-num buffer)))
-    (if (not (string-match-p point-history-ignore-buffer (buffer-name buffer)))
+    (if (and (not (string-match-p point-history-ignore-buffer (buffer-name buffer)))
+             (not (member major-mode point-history-ignore-major-mode)))
         ;; Each point-item has
         ;; nth 0: marker info
         ;; nth 1: line content
