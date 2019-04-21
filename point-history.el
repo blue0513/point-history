@@ -137,9 +137,9 @@ If the current line number is end of the buffer, go to the first line."
          (total-line-num (count-lines (point-min) (point-max))))
     (if (>= current-line-num total-line-num)
         (goto-line begining-line-num)
-      (goto-line (+ 1 current-line-num))
-      (if point-history-should-preview
-          (point-history-preview-at-point)))))
+      (goto-line (+ 1 current-line-num)))
+    (if point-history-should-preview
+        (point-history-preview-at-point))))
 
 (defun point-history-prev-line ()
   "Go to previous line in `point-history-show-mode'.
@@ -150,9 +150,9 @@ If the current line number is begining of the buffer, go to the last line."
          (total-line-num (count-lines (point-min) (point-max))))
     (if (<= current-line-num begining-line-num)
         (goto-line total-line-num)
-      (goto-line (- current-line-num 1))
-      (if point-history-should-preview
-          (point-history-preview-at-point)))))
+      (goto-line (- current-line-num 1)))
+    (if point-history-should-preview
+        (point-history-preview-at-point))))
 
 (defun point-history--remove-duplicate-element (content buffer line-num)
   "Remove duplicated element by comparing CONTENT & BUFFER & LINE-NUM."
