@@ -34,7 +34,8 @@
 
 (defvar point-history-list nil)
 (defvar point-history-show-buffer " *point-history-show*")
-(defvar point-history-last-visited-buffer nil)
+(defvar point-history-last-visited-buffer-info nil)
+(defvar point-history-last-previewed-buffer nil)
 
 (defcustom point-history-max-item-num 100
   "Max number of points saved in history."
@@ -91,11 +92,18 @@
   (setq mode-name "point-history")
   (use-local-map point-history-show-mode-map))
 
-(defun point-history-close ()
-  "Close point-history-show-buffer."
+(defun point-history-close (&optional only-close)
+  "Close point-history-show-buffer.
+If ONLY-CLOSE is non-nil, it dons not call `pop-to-buffer'."
   (interactive)
-  (switch-to-buffer-other-window point-history-last-visited-buffer)
-  (popwin:close-popup-window))
+  (if only-close
+      (popwin:close-popup-window)
+    (with-selected-window (get-buffer-window point-history-last-previewed-buffer)
+      (let* ((buffer (nth 0 point-history-last-visited-buffer-info))
+             (line (nth 1 point-history-last-visited-buffer-info)))
+        (pop-to-buffer-same-window buffer)
+        (goto-line line)
+        (popwin:close-popup-window)))))
 
 (defun point-history-goto ()
   "Go to the point in point-history list."
@@ -109,9 +117,9 @@
 
 (defun point-history--goto (buffer-str pos)
   "Pop to BUFFER-STR and go to POS, then close `point-history-show-buffer'."
-  (pop-to-buffer (get-buffer buffer-str))
-  (goto-char pos)
-  (point-history-close))
+  (with-selected-window (get-buffer-window point-history-last-previewed-buffer)
+    (goto-line (line-number-at-pos pos))
+    (point-history-close t)))
 
 (defun point-history-preview-at-point ()
   "Preview the buffer at point in the other window."
@@ -125,8 +133,10 @@
 
 (defun point-history--preview-at-point (buffer pos)
   "Show BUFFER and set the cursor at POS."
-  (switch-to-buffer-other-window buffer)
-  (goto-line (line-number-at-pos pos)))
+  (with-selected-window (get-buffer-window point-history-last-previewed-buffer)
+    (pop-to-buffer-same-window buffer)
+    (goto-line (line-number-at-pos pos))
+    (point-history--save-last-previewed-buffer! buffer)))
 
 (defun point-history-next-line ()
   "Go to next line in `point-history-show-mode'.
@@ -176,8 +186,15 @@ If the current line number is begining of the buffer, go to the last line."
     (push item point-history-list)))
 
 (defun point-history--save-last-visited-buffer! (buffer)
-  "Set BUFFER as `point-history-last-visited-buffer'."
-  (setq point-history-last-visited-buffer buffer))
+  "Set BUFFER as `point-history-last-visited-buffer-info'."
+  (let* ((buffer-info buffer)
+         (line-num-info (line-number-at-pos))
+         (info (list buffer-info line-num-info)))
+    (setq point-history-last-visited-buffer-info info)))
+
+(defun point-history--save-last-previewed-buffer! (buffer)
+  "Set BUFFER as `point-history-last-previewed-buffer'."
+  (setq point-history-last-previewed-buffer buffer))
 
 (defun point-history--build-valid-buffer-list! ()
   "Remove killed buffer from point-history-list."
@@ -232,12 +249,14 @@ If the current line number is begining of the buffer, go to the last line."
   (let* ((points point-history-list)
 	 (header "buffer:content"))
     (point-history--save-last-visited-buffer! (current-buffer))
+    (point-history--save-last-previewed-buffer! (current-buffer))
     (popwin:popup-buffer
      (generate-new-buffer point-history-show-buffer)
      :stick t
      :height point-history-show-buffer-height)
     (point-history-show-mode)
-    (point-history--build-history points)))
+    (point-history--build-history points)
+    (point-history-preview-at-point)))
 
 (defun point-history-show ()
   "Show point-history-list."
