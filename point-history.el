@@ -100,9 +100,9 @@ If ONLY-CLOSE is non-nil, it dons not call `pop-to-buffer'."
       (popwin:close-popup-window)
     (with-selected-window (get-buffer-window point-history-last-previewed-buffer)
       (let* ((buffer (nth 0 point-history-last-visited-buffer-info))
-             (line (nth 1 point-history-last-visited-buffer-info)))
+             (pos (nth 1 point-history-last-visited-buffer-info)))
         (pop-to-buffer-same-window buffer)
-        (goto-line line)
+        (goto-char pos)
         (popwin:close-popup-window)))))
 
 (defun point-history-goto ()
@@ -118,7 +118,7 @@ If ONLY-CLOSE is non-nil, it dons not call `pop-to-buffer'."
 (defun point-history--goto (buffer-str pos)
   "Pop to BUFFER-STR and go to POS, then close `point-history-show-buffer'."
   (with-selected-window (get-buffer-window point-history-last-previewed-buffer)
-    (goto-line (line-number-at-pos pos))
+    (goto-char pos)
     (point-history-close t)))
 
 (defun point-history-preview-at-point ()
@@ -135,7 +135,7 @@ If ONLY-CLOSE is non-nil, it dons not call `pop-to-buffer'."
   "Show BUFFER and set the cursor at POS."
   (with-selected-window (get-buffer-window point-history-last-previewed-buffer)
     (pop-to-buffer-same-window buffer)
-    (goto-line (line-number-at-pos pos))
+    (goto-char pos)
     (point-history--save-last-previewed-buffer! buffer)))
 
 (defun point-history-next-line ()
@@ -188,8 +188,8 @@ If the current line number is begining of the buffer, go to the last line."
 (defun point-history--save-last-visited-buffer! (buffer)
   "Set BUFFER as `point-history-last-visited-buffer-info'."
   (let* ((buffer-info buffer)
-         (line-num-info (line-number-at-pos))
-         (info (list buffer-info line-num-info)))
+         (pos-info (point))
+         (info (list buffer-info pos-info)))
     (setq point-history-last-visited-buffer-info info)))
 
 (defun point-history--save-last-previewed-buffer! (buffer)
