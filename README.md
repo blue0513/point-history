@@ -69,3 +69,7 @@ If you edit `point-history-ignore-buffer` and `point-history-ignore-major-mode`,
 (setq point-history-ignore-buffer "^ \\*Minibuf\\|^ \\*point-history-show*")
 (setq point-history-ignore-major-mode '(emacs-lisp-mode ruby-mode))
 ```
+
+## Extensions
+
++ [ivy-point-history](https://github.com/SuzumiyaAoba/ivy-point-history): point-history with ivy interface 
