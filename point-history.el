@@ -1,4 +1,4 @@
-;;; point-history --- Show the history of points you visited before
+;;; point-history.el --- Show the history of points you visited before
 
 ;; Copyright (C) 2019- blue0513
 
